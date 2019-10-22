@@ -4,18 +4,15 @@ import matplotlib.pyplot as plt
 import time
 from ruagomesfreiregamesol import SearchProblem
 
-with open("C:\\Users\\inesm\\Desktop\\IA\\IA1920Proj1alunosv01\\coords.pickle", "rb") as fp:   # Unpickling
+with open("coords.pickle", "rb") as fp:   # Unpickling
     coords = pickle.load(fp)
     
-for x in range(len(coords)): 
-    print (coords[x][0],)
-    print (x)
     
-with open("C:\\Users\\inesm\\Desktop\\IA\\IA1920Proj1alunosv01\\mapasgraph.pickle", "rb") as fp:   #Unpickling
+with open("mapasgraph.pickle", "rb") as fp:   #Unpickling
     AA = pickle.load(fp)
 U = AA[1]
 
-print (U)
+print(U)
     
 def plotpath(P,coords):   
         img = plt.imread('maps.png')

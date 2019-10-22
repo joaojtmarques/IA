@@ -13,24 +13,38 @@ class SearchProblem:
     
   def search(self, init, limitexp = 2000, limitdepth = 10, tickets = [math.inf,math.inf,math.inf]):
     
-    current_node = init[0]
+    current_node = Station([-1, init[0]], -1)
+
     
-    while(current_node != self._goal[0]):
-  
-      for child in self._model[int(current_node)]: 
-        node = Station(child, current_node)
-        node.setDistance(self._goal[0], self._auxheur)
-        self._queue.append(node)
+    
+    while(current_node._number != self._goal[0]):
+
+      if tickets[current_node._transport] != 0:
+        tickets[current_node._transport] -= 1
+        for child in self._model[current_node._number]: 
+          node = Station(child, current_node)
+          node.setDistance(self._goal[0], self._auxheur)
+          self._queue.append(node)
+
+        self._queue.sort(key=lambda x: x._distance, reverse=False) 
+        current_node = self._queue.pop(0)
+        print (current_node._number)
       
-      self._queue.sort(key=lambda x: x._distance, reverse=False)
-      current_node = self._queue.pop(0).getNumber()
-      print (int(current_node))
+      else:
+        current_node = self._queue.pop(0)
+          
       
-    for x in self._queue:
-      x.printNumber()
-      x.printDistance()
+    while (current_node._parent != -1):
+      self._solution.append([[current_node._transport], [current_node._number]])
+      current_node = current_node._parent
+    
+    self._solution.append([[], [current_node._number]])
+    self._solution.reverse()
+    print (self._solution)
+    
+    
         
-    return []
+    return self._solution
 
   
 class Station: 
