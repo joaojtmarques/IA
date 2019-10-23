@@ -1,6 +1,8 @@
 import math
 import pickle
 import time
+from itertools import product
+
   
 class SearchProblem:
 
@@ -10,69 +12,159 @@ class SearchProblem:
     self._model = model
     self._goal = goal
     self._auxheur = auxheur
-    
+    self._queueSize = 0
+    self._nOfAgents = 0
+    self._limitexp = 0
+
+
+
+    ##
+    ## to implement
+    ## 
+    pass
+
   def search(self, init, limitexp = 2000, limitdepth = 10, tickets = [math.inf,math.inf,math.inf]):
-    
-    current_node = Station([-1, init[0]], -1)
+    self._limitexp = limitexp
+    self.initialProblem(init)
+    self._queueSize = self.getQueueSize()
+    self._nOfAgents = len(init)
+    possibilities = []
 
-    
-    
-    while(current_node._number != self._goal[0]):
+    if self.isOptimalSolution(self.getPossibilityNumber(self._queue[0])):
+      return [[], self._queue[0]]
 
-      if tickets[current_node._transport] != 0:
-        tickets[current_node._transport] -= 1
-        for child in self._model[current_node._number]: 
-          node = Station(child, current_node)
-          node.setDistance(self._goal[0], self._auxheur)
-          self._queue.append(node)
-
-        self._queue.sort(key=lambda x: x._distance, reverse=False) 
-        current_node = self._queue.pop(0)
-        print (current_node._number)
+    exitWhile = 0
+    while (exitWhile == 0):
+      sucessors = []
+      for i in range(self._nOfAgents):
+        agentSucessors = []
+        agentSucessors = self.getSucessors(self._queue[0][i], self._limitexp)
+        if self._limitexp == 0:
+          return None
+        sucessors.append(agentSucessors)
       
-      else:
-        current_node = self._queue.pop(0)
-          
-      
-    while (current_node._parent != -1):
-      self._solution.append([[current_node._transport], [current_node._number]])
-      current_node = current_node._parent
-    
-    self._solution.append([[], [current_node._number]])
-    self._solution.reverse()
-    print (self._solution)
-    
-    
+      self._queue.pop(0)
+      possibilities.clear()
+      possibilities = self.generatePossiblePaths(sucessors)
+      #for el in possibilities:
+        #print("element: ", el[0]._number, ", ", el[1]._number, el[2]._number,)
+
+      for element in possibilities:
+        #print("element", self.getPossibilityNumber(element))
+        if self.isPossibleCombination(self.getPossibilityNumber(element)):
+          print( "COMBINATION: ", self.getPossibilityNumber(element))
+          if self.isOptimalSolution(self.getPossibilityNumber(element)):
+            #solucao encontrada, fazer funcao
+            print("aaa")
+            solution_found = list(element)
+            exitWhile = 1
+            break
+        else:
+         # print("BAHAHHAAHAHA", self.getPossibilityNumber(element) )
+          possibilities.remove(element)
         
+      if exitWhile != 1:
+        self._queue.extend(possibilities)
+      print("QUEUE")
+     # for x in self._queue[0]:
+      #  print(x._number)
+
+    print(solution_found)
+    #aux = list(solution_found)
+    while solution_found[0]._parent != None:
+      self._solution.append(self.printAux(solution_found))
+      print(self._solution)
+      for i in range(len(solution_found)):
+        print(i)
+        solution_found[i] = solution_found[i]._parent
+    
+    current_position_number = []
+    for x in solution_found:
+      current_position_number.append(x._number)
+
+    self._solution.append([[], current_position_number])
+    self._solution.reverse()
+
+    print(self._solution)
+
+
+
+
+    ##
+    ## to implement
+    ##
     return self._solution
 
   
-class Station: 
+  def initialProblem(self, init):
+    initialStations = []
+    i = 0
+    for x in init:
+      newStation = Station([-1, x], None, i)
+      initialStations.append(newStation)
+      i += 1
+    self._queue.append(initialStations)
+
+
+  def getQueueSize(self):
+    return len(self._queue)
+
+  def getSucessors(self, station, limitexp):
+    sucessors = []
+    #print(station._number)
+    #print("parent", station._parent._number)
+    if self._limitexp == 0:
+      return 0
+    self._limitexp -=1
+    for child in self._model[station._number]:
+      newStation = Station(child, station, station._agent)
+      newStation.setDistance(self._goal[station._agent], self._auxheur)
+
+      sucessors.append(newStation)
+    sucessors.sort(key=lambda x: x._distance, reverse=False) 
+    return sucessors
     
-  def __init__(self, child, parent):
+
+  def generatePossiblePaths(self, sucessors):
+    return list(product(*sucessors))
+
+
+  def isOptimalSolution(self, positionSet):
+    return (positionSet == self._goal)
+
+  def getPossibilityNumber(self, possibility):
+    lst = []
+    for x in possibility:
+      lst.append(x._number)
+    return lst
+  
+  def isPossibleCombination(self, possibility):
+    for i in range(0, len(possibility)):
+      for j in range(1, len(possibility)):
+        if possibility[i] == possibility[j] and i != j:
+          return False
+    return True  
+
+  def printAux(self, current_position):
+    aux = []
+    auxTransport = []
+    auxStations = []
+    for x in current_position:
+      auxTransport.append(x._transport)
+      auxStations.append(x._number)
+    aux.append(auxTransport)
+    aux.append(auxStations)
+    return aux
+
+class Station:
+
+  def __init__(self, child, parent, agent):
     self._transport = child[0]
     self._number = child[1]
-    self._distance = 0
     self._parent = parent
-        
+    self._distance = 0
+    self._agent = agent
+
   def setDistance(self, goal, auxheur):
     self._distance = math.sqrt((auxheur[self._number-1][0]- auxheur[goal-1][0])**2 +(auxheur[self._number-1][1]- auxheur[goal-1][1])**2)
     
-  def getDistance(self):
-    return self._distance
-  
-  def getNumber(self):
-        return self._number
-  
-  def printNumber(self):
-    print ("filho - ", self._number)
-    
-  def printDistance(self):
-        print ("distance - ", self._distance)
-  
-    
-    
-    
-# 0 - taxi
-# 1 - autocarro
-# 2 - metro
