@@ -15,9 +15,6 @@ class SearchProblem:
     self._queueSize = 0
     self._nOfAgents = 0
     self._limitexp = 0
-
-
-
     ##
     ## to implement
     ## 
@@ -38,34 +35,31 @@ class SearchProblem:
       sucessors = []
       for i in range(self._nOfAgents):
         agentSucessors = []
-        agentSucessors = self.getSucessors(self._queue[0][i], self._limitexp)
+        agentSucessors = self.getSucessors(self._queue[0][i], self._limitexp).copy()
         if self._limitexp == 0:
           return None
         sucessors.append(agentSucessors)
-      
+    
       self._queue.pop(0)
-      possibilities.clear()
-      possibilities = self.generatePossiblePaths(sucessors)
+      possibilities = self.generatePossiblePaths(sucessors).copy()
       #for el in possibilities:
         #print("element: ", el[0]._number, ", ", el[1]._number, el[2]._number,)
-
+      a = []
       for element in possibilities:
         #print("element", self.getPossibilityNumber(element))
-        if self.isPossibleCombination(self.getPossibilityNumber(element)):
-          print( "COMBINATION: ", self.getPossibilityNumber(element))
-          if self.isOptimalSolution(self.getPossibilityNumber(element)):
+        a = self.getPossibilityNumber(element)
+        if self.isPossibleCombination(a):
+          if self.isOptimalSolution(a):
             #solucao encontrada, fazer funcao
-            print("aaa")
-            solution_found = list(element)
-            exitWhile = 1
-            break
+            if self.enoughTickets(element, tickets):
+              solution_found = list(element)
+              exitWhile = 1
+              break
         else:
-         # print("BAHAHHAAHAHA", self.getPossibilityNumber(element) )
           possibilities.remove(element)
         
       if exitWhile != 1:
         self._queue.extend(possibilities)
-      print("QUEUE")
      # for x in self._queue[0]:
       #  print(x._number)
 
@@ -87,13 +81,25 @@ class SearchProblem:
 
     print(self._solution)
 
-
-
-
     ##
     ## to implement
     ##
     return self._solution
+  
+
+  def enoughTickets(self, possibility, tickets):
+    element = list(possibility)
+    tick = tickets.copy()
+    print(tickets)
+    while element[0]._parent != None:
+      for i in range(len(element)):
+        if (tick[element[i]._transport] == 0):
+          return False
+        else:
+          tick[element[i]._transport] -= 1
+      for i in range(len(element)):
+        element[i] = element[i]._parent
+    return True
 
   
   def initialProblem(self, init):
@@ -121,7 +127,7 @@ class SearchProblem:
       newStation.setDistance(self._goal[station._agent], self._auxheur)
 
       sucessors.append(newStation)
-    sucessors.sort(key=lambda x: x._distance, reverse=False) 
+    #sucessors.sort(key=lambda x: x._distance, reverse=False) 
     return sucessors
     
 
@@ -167,4 +173,3 @@ class Station:
 
   def setDistance(self, goal, auxheur):
     self._distance = math.sqrt((auxheur[self._number-1][0]- auxheur[goal-1][0])**2 +(auxheur[self._number-1][1]- auxheur[goal-1][1])**2)
-    
